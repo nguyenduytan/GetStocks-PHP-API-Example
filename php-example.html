@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PHP Example - GetStocks API</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" />
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1a1a1a; /* Dark background */
+            color: #e0e0e0; /* Light text for readability */
+            line-height: 1.6;
+        }
+        h1, h2, h3 {
+            color: #ffffff; /* White for headings */
+            border-bottom: 2px solid #444; /* Subtle border for headings */
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        p, ol, ul {
+            color: #c0c0c0; /* Slightly lighter text for paragraphs */
+        }
+        pre {
+            background-color: #2d2d2d; /* Darker background for code blocks */
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Subtle shadow for depth */
+            overflow-x: auto; /* Horizontal scroll for long code */
+            overflow-y: auto; /* Vertical scroll for very long code */
+            margin: 20px 0;
+            max-height: none; /* Remove max-height to ensure all code shows */
+            white-space: pre-wrap; /* Ensure code wraps and displays correctly */
+            word-wrap: break-word; /* Break long lines if needed */
+            font-size: 14px; /* Ensure readability */
+            line-height: 1.4; /* Better line spacing for code */
+        }
+        code {
+            font-family: 'Courier New', Courier, monospace;
+        }
+        ol, ul {
+            padding-left: 20px;
+        }
+        a {
+            color: #66b0ff; /* Light blue for links */
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .highlight {
+            background-color: #3a3a3a; /* Highlight for important notes */
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .logo {
+            max-width: 300px; /* Increased size as requested */
+            margin-right: 20px;
+        }
+        pre::-webkit-scrollbar {
+            width: 10px;
+        }
+        pre::-webkit-scrollbar-track {
+            background: #2d2d2d;
+        }
+        pre::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="https://getstocks.net/assets/images/logo-light.png" alt="GetStocks Logo" class="logo" />
+        <h3>API Example</h3>
+    </div>
+    <p>This page provides a PHP example script to interact with the GetStocks API. Follow the setup instructions below to use it:</p>
+    
+    <h2>Setup Instructions</h2>
+    <ol>
+        <li><strong>Install PHP and Composer</strong>: Ensure you have PHP 7.4 or higher installed, and install Composer from <a href="https://getcomposer.org/">https://getcomposer.org/</a>.</li>
+        <li><strong>Install Required Packages</strong>: Run the following command in your terminal in the directory containing this file:
+            <pre><code class="language-bash">composer require guzzlehttp/guzzle</code></pre>
+        </li>
+        <li><strong>Configure Environment</strong>: Create or use an existing `.env` file in your project root. Ensure you have a valid email and password for a registered account on getstocks.net to get a JWT token. The token will be received via email after logging in; manually set it in `$this->token` during runtime or store it securely.</li>
+        <li><strong>Run the Script</strong>: Save this example as `api_example.php`, then run it from the command line:
+            <pre><code class="language-bash">php api_example.php</code></pre>
+            Ensure the script has proper permissions and PHP is in your system's PATH.</li>
+        <li><strong>Notes</strong>: This example assumes internet access to call the getstocks.net API. Handle errors appropriately in a production environment, including rate limits and timeouts. For large files, consider adjusting Guzzle's timeout or using streaming for downloads.</li>
+    </ol>
+
+    <h2>PHP Example Code</h2>
+    <pre><code class="language-php">
+&lt;?php
+// Ensure the FULL PHP code is included here (copy-paste the ENTIRE content of api_example.php without ANY modifications or omissions)
+<?php
+require 'vendor/autoload.php';
+
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
+
+class GetStocksApiExample
+{
+    private $client;
+    private $token = ''; // Store token here, check if not empty before fetching
+
+    public function __construct()
+    {
+        $this->client = new Client([
+            'base_uri' => 'https://getstocks.net/',
+            'timeout'  => 30,
+        ]);
+    }
+
+    // Step 1: Get access token via email (only if token is empty)
+    public function getAccessToken($email, $password)
+    {
+        // Skip if token already exists
+        if (!empty($this->token)) {
+            echo "Token already exists: " . $this->token . "\n";
+            return;
+        }
+
+        try {
+            $response = $this->client->post('/api/auth/login', [
+                'form_params' => [
+                    'email' => $email,
+                    'password' => $password
+                ]
+            ]);
+
+            // Token is sent to the email; user must manually set it here
+            // Note: Replace this with the actual token received via email after login
+            $this->token = ''; // User must set this manually or retrieve it securely
+            echo "Please check your email for the token and set it in \$this->token manually.\n";
+        } catch (RequestException $e) {
+            echo "Error getting token: " . $e->getMessage() . "\n";
+        }
+    }
+
+    // Step 2: Get user profile information
+    public function getProfile()
+    {
+        if (empty($this->token)) {
+            echo "No token available. Please get token first.\n";
+            return;
+        }
+
+        try {
+            $response = $this->client->get('/api/auth/profile', [
+                'query' => ['token' => $this->token]
+            ]);
+
+            $data = json_decode($response->getBody(), true);
+            if ($data['status'] === 200) {
+                echo "Profile: " . json_encode($data['result'], JSON_PRETTY_PRINT) . "\n";
+            } else {
+                echo "Error: " . $data['message'] . "\n";
+            }
+        } catch (RequestException $e) {
+            echo "Error getting profile: " . $e->getMessage() . "\n";
+        }
+    }
+
+    // Step 3: Get list of supported providers
+    public function getProviders()
+    {
+        if (empty($this->token)) {
+            echo "No token available. Please get token first.\n";
+            return;
+        }
+
+        try {
+            $response = $this->client->get('/api/v1/providers', [
+                'query' => ['token' => $this->token]
+            ]);
+
+            $data = json_decode($response->getBody(), true);
+            if ($data['status'] === 200) {
+                echo "Providers: " . json_encode($data['result'], JSON_PRETTY_PRINT) . "\n";
+            } else {
+                echo "Error: " . $data['message'] . "\n";
+            }
+        } catch (RequestException $e) {
+            echo "Error getting providers: " . $e->getMessage() . "\n";
+        }
+    }
+
+    // Step 4: Get list of user orders
+    public function getOrders()
+    {
+        if (empty($this->token)) {
+            echo "No token available. Please get token first.\n";
+            return;
+        }
+
+        try {
+            $response = $this->client->get('/api/v1/orders', [
+                'query' => ['token' => $this->token]
+            ]);
+
+            $data = json_decode($response->getBody(), true);
+            if ($data['status'] === 200) {
+                echo "Orders: " . json_encode($data['result'], JSON_PRETTY_PRINT) . "\n";
+            } else {
+                echo "Error: " . $data['message'] . "\n";
+            }
+        } catch (RequestException $e) {
+            echo "Error getting orders: " . $e->getMessage() . "\n";
+        }
+    }
+
+    // Step 5: Check current balance
+    public function getBalance()
+    {
+        if (empty($this->token)) {
+            echo "No token available. Please get token first.\n";
+            return;
+        }
+
+        try {
+            $response = $this->client->get('/api/v1/balance', [
+                'query' => ['token' => $this->token]
+            ]);
+
+            $data = json_decode($response->getBody(), true);
+            if ($data['status'] === 200) {
+                echo "Balance: " . json_encode($data['result'], JSON_PRETTY_PRINT) . "\n";
+            } else {
+                echo "Error: " . $data['message'] . "\n";
+            }
+        } catch (RequestException $e) {
+            echo "Error getting balance: " . $e->getMessage() . "\n";
+        }
+    }
+
+    // Step 6: Get item information (optional)
+    public function getInfo($link, $ispre = 1)
+    {
+        if (empty($this->token)) {
+            echo "No token available. Please get token first.\n";
+            return;
+        }
+
+        try {
+            $response = $this->client->post('/api/v1/getinfo', [
+                'query' => ['token' => $this->token],
+                'form_params' => [
+                    'link' => $link,        // Required parameter
+                    'ispre' => $ispre       // Required parameter
+                ]
+            ]);
+
+            $data = json_decode($response->getBody(), true);
+            if ($data['status'] === 200) {
+                echo "Info: " . json_encode($data['result'], JSON_PRETTY_PRINT) . "\n";
+                return $data['result']['support']; // Return support data for getLink
+            } else {
+                echo "Error: " . $data['message'] . "\n";
+                return null;
+            }
+        } catch (RequestException $e) {
+            echo "Error getting info: " . $e->getMessage() . "\n";
+            return null;
+        }
+    }
+
+    // Step 7: Generate download link
+    public function getLink($link, $ispre = 1, $type = null)
+    {
+        if (empty($this->token)) {
+            echo "No token available. Please get token first.\n";
+            return;
+        }
+
+        try {
+            $response = $this->client->post('/api/v1/getlink', [
+                'query' => ['token' => $this->token],
+                'form_params' => [
+                    'link' => $link,        // Required parameter
+                    'ispre' => $ispre,      // Required parameter
+                    'type' => $type         // Required parameter if not using getInfo
+                ]
+            ]);
+
+            $data = json_decode($response->getBody(), true);
+            if ($data['status'] === 200) {
+                echo "GetLink processing: " . json_encode($data['result'], JSON_PRETTY_PRINT) . "\n";
+                return $data['result'];
+            } else {
+                echo "Error: " . $data['message'] . "\n";
+                return null;
+            }
+        } catch (RequestException $e) {
+            echo "Error getting link: " . $e->getMessage() . "\n";
+            return null;
+        }
+    }
+
+    // Step 8: Check download status and return full result, then echo download link
+    public function checkDownloadStatus($slug, $id, $ispre, $type)
+    {
+        set_time_limit(60); // Set timeout
+
+        if (empty($this->token)) {
+            echo "No token available. Please get token first.\n";
+            return;
+        }
+
+        // or can use timeout inside while
+        //$start_time = microtime(true);
+        //$timeout = 60;
+
+        while (true) {
+            //$current_time = microtime(true);
+            //if (($current_time - $start_time) >= $timeout) {
+                //echo "Timeout! break while.\n";
+                //return null;
+            //}
+            try {
+                $response = $this->client->post('/api/v1/download-status', [
+                    'query' => ['token' => $this->token],
+                    'form_params' => [
+                        'slug' => $slug,    // Required parameter
+                        'id' => $id,        // Required parameter
+                        'ispre' => $ispre,  // Required parameter
+                        'type' => $type     // Required parameter
+                    ]
+                ]);
+
+                $data = json_decode($response->getBody(), true);
+                if ($data['status'] === 200) {
+                    echo "Download Status: " . json_encode($data['result'], JSON_PRETTY_PRINT) . "\n";
+                    if ($data['result']['status'] === 1) {
+                        // Echo the download link directly
+                        $downloadLink = "https://getstocks.net/api/v1/download/{$data['result']['itemDCode']}?token={$this->token}";
+                        echo "Download link ready: " . $downloadLink . "\n";
+                        return $data['result']; // Return full result for optional use by the client
+                    }
+                } else {
+                    echo "Error: " . $data['message'] . "\n";
+                    return null;
+                }
+            } catch (RequestException $e) {
+                echo "Error checking status: " . $e->getMessage() . "\n";
+                return null;
+            }
+            sleep(10); // Wait 10 seconds before checking again, loop until status = 1 or error
+        }
+    }
+
+    // Step 10: Example usage
+    public function runExample()
+    {
+        // Step 1: Get token (only if not already set)
+        $this->getAccessToken('demo@demo.com', 'your_password');
+
+        // Step 2: Get profile
+        $this->getProfile();
+
+        // Step 3: Get providers (optional, to get type if needed)
+        $this->getProviders();
+
+        // Step 4: Get orders
+        $this->getOrders();
+
+        // Step 5: Check balance
+        $this->getBalance();
+
+        // Step 6: Get info (optional) to find type
+        $link = 'https://www.freepik.com/premium-vector/sport-car-logo_48107525.htm';
+        $support = $this->getInfo($link, 1);
+        $type = 'freepik_standard'; // Default type; users can manually set $type = 'freipik_standard', use $support['type'][0], or leave as null if known
+        // Note: Clients can manually set $type = 'freepik_standard' or use $support['type'][0] if available from getInfo, or leave as null if the type is already known
+
+        // Step 7: Generate download link
+        $getLinkResult = $this->getLink($link, 1, $type); // All parameters are required
+        if ($getLinkResult) {
+            $slug = $getLinkResult['provSlug'];
+            $itemId = $getLinkResult['itemID'];
+            $ispre = $getLinkResult['isPremium'];
+            $itemType = $getLinkResult['itemType'];
+
+            // Step 8: Check download status and get download link
+            $downloadResult = $this->checkDownloadStatus($slug, $itemId, $ispre, $itemType);
+            if ($downloadResult) {
+                echo "Full download result available for customization: " . json_encode($downloadResult, JSON_PRETTY_PRINT) . "\n";
+                // Clients can use other fields like itemFilename, itemDLink, etc., as needed
+            }
+        }
+    }
+}
+
+// Run the example
+$example = new GetStocksApiExample();
+$example->runExample();
+</code></pre>
+
+    <h2>Notes for Developers</h2>
+    <ul>
+        <li><strong>Required Parameters</strong>: All parameters in `getLink`, `checkDownloadStatus`, and `getInfo` are required. If not using `getInfo`, users must manually specify the correct `type` (e.g., `freepik_standard`, `shutterstock_photo`).</li>
+        <li><strong>Default Type</strong>: `$type` defaults to `'freepik_standard'`. Users can manually set `$type = 'freipik_standard'`, use `$support['type'][0]` if available from `getInfo`, or leave it as `null` if the type is already known.</li>
+        <li><strong>Download Link</strong>: After `checkDownloadStatus` returns with `result->status = 1`, the download link is `https://getstocks.net/api/v1/download/$downloadResult['itemDCode']?token=$this->token`. Clients can use other fields in `$downloadResult` (e.g., `itemFilename`, `itemDLink`) for customization as needed.</li>
+        <li><strong>Status Polling</strong>: `checkDownloadStatus` polls every 10 seconds while `status = 200`. If `status` changes to another value (e.g., 400), it breaks and returns an error. When `result->status = 1`, it returns the full result and displays the download link.</li>
+    </ul>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            document.querySelectorAll('pre code').forEach((block) => {
+                hljs.highlightElement(block);
+            });
+        });
+    </script>
+</body>
+</html>
